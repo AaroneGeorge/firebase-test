@@ -1,34 +1,42 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from 'react';
+import './App.css';
+import { Auth } from './components/auth.jsx'
+import { db } from './config/firebase';
+import { getDocs, collection } from 'firebase/firestore'
 
 function App() {
-  const [count, setCount] = useState(0)
+
+  const[movieList, setMovieList] = useState([]);
+
+  const moviesCollectionRef = collection(db,"movies");
+
+  useEffect(() => {
+    const getMovieList = async () => {
+      try {
+        const data = await getDocs(moviesCollectionRef);
+        const filteredData = data.docs.map((doc) => ({...doc.data(), id: doc.id,}));
+        setMovieList(filteredData);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    getMovieList();
+  }, [])
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <div className='App'>
+        <Auth />
+
+        <div>
+          {movieList.map((movie) => (
+            <div>
+              <h1 style={{color: movie.gotOscar ? 'green' : 'red'}}> {movie.title} </h1>
+              <p> Date: {movie.releaseDate} </p>
+            </div>
+          ))}
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
   )
 }
 
